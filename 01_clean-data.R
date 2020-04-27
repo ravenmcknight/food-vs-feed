@@ -18,6 +18,7 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(stringr)
+library(lme4)
 
 # read data from kaggle
 fao <- fread("FAO.csv")
@@ -43,7 +44,29 @@ maizedat <- maize_long %>% pivot_wider(names_from = "Element", values_from = "am
 setDT(maizedat)
 
 # get prop
-maizedat[, prop := Food/Feed]
+maizedat <- maizedat[Food != 0]
+maizedat[, prop := Feed/Food]
 
-ggplot(maizedat, aes(x=year, y=prop, color=Area)) +
-  geom_line()
+
+ggplot(maizedat[Area == "United States of America" | Area == "Mexico" | Area == "China, mainland" | Area == "Zimbabwe"], aes(x=year, y=prop, color=Area)) +
+  geom_line() + ggtitle("Proportion of Feed to Food, example countires")
+
+
+moddat <- na.omit(maizedat)
+setDT(moddat)
+moddat[prop == 0, prop := 0.01]
+
+ggplot(moddat, aes(x=log(prop))) +
+  geom_histogram() + ggtitle("distribution of response")
+
+# we'll use log as a response
+
+
+# simplest mod: just by country. this is fixed effects
+mod1 <- lmer(log(prop) ~ (1|Area), data = moddat)
+
+
+## addition: random effects by country
+
+
+summary(mod1)
