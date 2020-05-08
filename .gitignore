@@ -1,5 +1,6 @@
 .DS_Store
 .Rproj.user/
 .Rproj
-FA0.csv
-
+data/
+img/
+.Rproj.user

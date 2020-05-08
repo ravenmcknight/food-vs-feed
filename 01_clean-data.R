@@ -2,7 +2,7 @@
 ## packages -----------------------------------------------
 
 # these lines make sure any user has all the necessary packages!
-packages <- c('data.table')
+packages <- c('data.table', 'tidyr', 'dplyr', 'ggplot2', 'stringr')
 
 miss_pkgs <- packages[!packages %in% installed.packages()[,1]]
 
@@ -14,14 +14,9 @@ invisible(lapply(packages, library, character.only = TRUE))
 
 rm(miss_pkgs, packages)
 
-library(tidyr)
-library(dplyr)
-library(ggplot2)
-library(stringr)
-library(lme4)
 
 # read data from kaggle
-fao <- fread("FAO.csv")
+fao <- fread("data/FAO.csv")
 maize <- fao[Item == "Maize and products"]
 
 # reshape data
@@ -61,12 +56,27 @@ ggplot(moddat, aes(x=log(prop))) +
 
 # we'll use log as a response
 
+saveRDS(moddat, "data/moddat.RDS")
+# wider again?
 
-# simplest mod: just by country. this is fixed effects
-mod1 <- lmer(log(prop) ~ (1|Area), data = moddat)
+moddat[, logprop := log(prop + 0.01)]
+moddatwide <- moddat %>% 
+  pivot_wider(names_from = "year", values_from = "prop", id = "Area")
+
+setDT(moddatwide)
+saveRDS(moddatwide, "data/moddatwide.RDS")
+
+moddatwidelog <- moddat %>% 
+  pivot_wider(names_from = "year", values_from = "logprop", id = "Area")
 
 
-## addition: random effects by country
+setDT(moddatwidelog)
+saveRDS(moddatwidelog, "data/moddatwidelog.RDS")
 
 
-summary(mod1)
+# this is what we can use to model both jointly
+jointwide <- moddat %>%
+  pivot_wider(names_from = "year", values_from = c("Feed", "Food"), id_cols = "Area")
+
+setDT(jointwide)
+saveRDS(jointwide, "data/jointwide.RDS")
