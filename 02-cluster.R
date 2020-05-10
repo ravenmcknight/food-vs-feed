@@ -50,18 +50,91 @@ longdat <- readRDS('data/moddat.RDS')
 setDT(longdat)
 longdat <- clusterassignment[longdat, on = "Area"]
 
-ggplot(longdat[clusters3 == "B"], aes(x = year, y = Feed, color = Area)) +
+a <- ggplot(longdat[clusters3 == "B"], aes(x = year, y = Feed, color = Area)) +
   geom_line() + theme_minimal() + ggtitle("Feed Production in Cluster 2 when k = 3")
 
-ggplot(longdat[clusters3 == "B"], aes(x = year, y = Food, color = Area)) +
+b <- ggplot(longdat[clusters3 == "B"], aes(x = year, y = Food, color = Area)) +
   geom_line() + theme_minimal() + ggtitle("Food Production in Cluster 2 when k = 3")
+library(gridExtra)
 
-ggplot(longdat[clusters3 == "C"], aes(x=year, y=prop, color=Area)) +
+grid.arrange(a, b, nrow = 1)
+
+c <- ggplot(longdat[clusters3 == "B"], aes(x=year, y=prop, color=Area)) +
   geom_line() + theme_minimal() +
   geom_hline(yintercept = 1, lwd = 0.4, linetype = "dashed") +
-  labs(title = "Proportion of feed to food in Cluster 3 when k = 3", 
+  labs(title = "Proportion of feed to food in Cluster 2 when k = 3", 
        subtitle = "Dotted line indications equal amounts food and feed. Below the line, \ncountries produce more food than feed and vice versa.") +
   theme(plot.subtitle = element_text(hjust = 0))
 
+d <- ggplot(longdat[clusters3 == "C"], aes(x=year, y=prop, color=Area)) +
+  geom_line() + theme_minimal() +
+  geom_hline(yintercept = 1, lwd = 0.4, linetype = "dashed") +
+  labs(title = "Proportion of feed to food in Cluster 2 when k = 3") +
+  theme(plot.subtitle = element_text(hjust = 0))
+
+grid.arrange(c, d, nrow = 1)
 
 
+reshapedat <- longdat %>% 
+  pivot_longer(cols = c(Food, Feed), names_to = "Type", values_to = "amount")
+setDT(reshapedat)
+
+ggplot(reshapedat[Area == "India" | Area == "Indonesia"]) +
+  geom_line(aes(x = year, y = amount, color = Area, linetype = Type)) +
+  theme_minimal() + 
+  labs(title = "Food and Feed in India and Indonesia")
+
+ggplot(reshapedat[Area == "United States of America" | Area == "China, mainland"]) +
+  geom_line(aes(x = year, y = amount, color = Area, linetype = Type)) +
+  theme_minimal() + 
+  labs(title = "Food and Feed in United States, China")
+
+ggplot(longdat[Area == "United States of America"]) +
+  geom_line(aes(x = year, y = prop)) +
+  theme_minimal() + 
+  labs(title = "Proportion of Feed to Food in United States")
+
+
+ggplot(reshapedat[Area == "Philippines" | Area == "Zimbabwe"]) +
+  geom_line(aes(x = year, y = amount, color = Area, linetype = Type)) +
+  theme_minimal() + 
+  labs(title = "Food and Feed in Philippines and Zimbabwe")
+
+
+ggplot(reshapedat[Area == "Egypt" | Area == "South Africa"]) +
+  geom_line(aes(x = year, y = amount, color = Area, linetype = Type)) +
+  theme_minimal() + 
+  labs(title = "Food and Feed in Egypt and South Africa")
+
+
+ggplot(reshapedat[Area == "Ethiopia" | Area == "Kenya" | Area == "Nigeria"]) +
+  geom_line(aes(x = year, y = amount, color = Area, linetype = Type)) +
+  theme_minimal() + 
+  labs(title = "Food and Feed in Ethiopia, Kenya, and Nigeria")
+
+
+ggplot() +
+  geom_line(aes(group = Area, x = year, y = log(prop)), data = longdat[clusters10 == "A"], color = alpha("gray", 0.7)) +
+  geom_line(aes(x = year, y = log(prop), color = Area), data = longdat[Area %in% c("Belarus", "Greece", "Hungary", "Jordan", "Lebanon", "Spain", "Thailand")]) +
+  theme_minimal() +
+  geom_hline(yintercept = log(1)) +
+  labs(title = "(Log) Proportion of feed to food in 104 countries", 
+       subtitle = "Horizontal line indicates 1:1 ratio") +
+  theme(plot.subtitle = element_text(hjust = 0))
+
+longdat[prop > 400]
+
+
+b <- c("Cameroon", "Colombia", "Democratic People's Republic of Korea", 
+  "Gautemala", "Malawi", "Morocco", "Mozambique", "Nepal", 
+  "Pakistan", "Phillipines", "Turkey", "Uganda", "Venezuela", "Viet Nam", 
+  "Zambia", "Zimbabwe")
+
+ggplot() +
+  geom_line(aes(group = Area, x = year, y = prop), data = longdat[clusters10 == "B"], color = alpha("gray", 0.7)) +
+  geom_line(aes(x = year, y = prop, color = Area), data = longdat[Area %in% c("Zimbabwe", "Philippines")]) +
+  theme_minimal() +
+  geom_hline(yintercept = 1) +
+  labs(title = "Proportion of feed to food in 16 countries", 
+       subtitle = "Horizontal line indicates 1:1 ratio") +
+  theme(plot.subtitle = element_text(hjust = 0))
